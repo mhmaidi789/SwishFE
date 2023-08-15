@@ -48,8 +48,8 @@ const updateMarketHighLow = (
     marketMap: altMarketLines,
     altMarket: altMarket,
   ) => {
-
     const { playerId, line, underOdds, overOdds, pushOdds } = altMarket
+
     let trackedLines = marketMap?.[playerId];
     if (!trackedLines) {
       marketMap[playerId] = { lowLine: line, highLine: line, historicalLinesGoodOdds: [] };
@@ -75,7 +75,7 @@ export const makeAltMarketsMap = (altData: altMarket[]) => {
   
     altData.forEach((alt: altMarket) => {
       switch (alt.statType) {
-        case "assits":
+        case "assists":
           updateMarketHighLow(assistsByPlayerId, alt);
           break;
         case "rebounds":
@@ -102,9 +102,7 @@ export const makeAltMarketsMap = (altData: altMarket[]) => {
 
 const isMarketSuspended = (prop: propMarket, historicalLinesGoodOdds: number[]) => {
   const {marketSuspended, line} = prop
-
   return !!marketSuspended || !historicalLinesGoodOdds.includes(line)
-    
 }
   
 
