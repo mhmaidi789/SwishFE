@@ -1,13 +1,12 @@
 import "./App.css";
 
-import propsData from "./data/props.json";
-import altData from "./data/alternates.json";
+import propsDataRaw from "./data/props.json";
+import altDataRaw from "./data/alternates.json";
 import { DataGrid } from "@mui/x-data-grid";
 import { columns, getMarketRows, makeAltMarketsMap } from "./utils";
 import { useCallback, useState } from "react";
 
-const ALT_MARKET_MAP = makeAltMarketsMap(altData);
-const MARKET_ROWS = getMarketRows(propsData, ALT_MARKET_MAP);
+const MARKET_ROWS = getMarketRows(propsDataRaw, altDataRaw);
 
 function App() {
   const [marketRowsFiltered, setMarketRowsFiltered] = useState(MARKET_ROWS);
@@ -16,10 +15,9 @@ function App() {
     const text = event.target.value.toLowerCase();
 
     const filteredRows = MARKET_ROWS.filter((market) => {
-      const { teamAbbr, teamNickname, playerName } = market;
+      const { teamNickname, playerName } = market;
 
       return (
-        teamAbbr.toLocaleLowerCase().includes(text) ||
         teamNickname.toLocaleLowerCase().includes(text) ||
         playerName.toLocaleLowerCase().includes(text)
       );

@@ -28,15 +28,15 @@ type altMarket = {
 }
 
 type altMarketMap = {
-    assistsByPlayerId: altMarketLines;
-    reboundsByPlayerId: altMarketLines;
-    pointsbyPlayerId: altMarketLines;
-    stealsByPlayerId: altMarketLines;
+  assistsByPlayerId: altMarketLines;
+  reboundsByPlayerId: altMarketLines;
+  pointsbyPlayerId: altMarketLines;
+  stealsByPlayerId: altMarketLines;
 }
-
 type lines = {
     lowLine: number;
     highLine: number;
+    historicalLines: number[];
   };
   
 type altMarketLines = {
@@ -49,14 +49,16 @@ const updateMarketHighLow = (
     currentLine: number,
     playerId: number
   ) => {
-    const trackedLines = market?.[playerId];
+    let trackedLines = market?.[playerId];
     if (!trackedLines) {
-      market[playerId] = { lowLine: currentLine, highLine: currentLine };
+      market[playerId] = { lowLine: currentLine, highLine: currentLine, historicalLines: [] };
+      trackedLines = market[playerId];
     } else if (currentLine < trackedLines.lowLine) {
       market[playerId].lowLine = currentLine;
-    } else {
+    } else if (currentLine > trackedLines.highLine) {
       market[playerId].highLine = currentLine;
     }
+    trackedLines.historicalLines.push(currentLine);
   };
   
 
@@ -92,64 +94,71 @@ export const makeAltMarketsMap = (altData: altMarket[]) => {
       stealsByPlayerId,
     };
   };
+
+const isMarketSuspended = (prop: propMarket, historicalLines: number[]) => {
+  const {marketSuspended, line} = prop
+
+  return (
+    !!marketSuspended ||
+    !historicalLines.includes(line)
+    )
+}
   
 
-export const getMarketRows = (propsData: propMarket[], altMarketsMap: altMarketMap) => {
+export const getMarketRows = (propsData: propMarket[], altDataRaw: altMarket[]) => {
+  const altMarketsMap = makeAltMarketsMap(altDataRaw);
 
-return propsData.map((prop: propMarket) => {
-    const {
-      playerId,
-      teamAbbr,
-      teamNickname,
-      playerName,
-      position,
-      statType,
-      line,
-      marketSuspended,
-    } = prop;
+  return propsData.map((prop: propMarket) => {
+      const {
+        playerId,
+        teamAbbr,
+        teamNickname,
+        playerName,
+        position,
+        statType,
+        line,
+      } = prop;
 
-    let marketType:
-      | "assistsByPlayerId"
-      | "reboundsByPlayerId"
-      | "pointsbyPlayerId"
-      | "stealsByPlayerId";
-    switch (prop.statType) {
-      case "assists":
-        marketType = "assistsByPlayerId";
-        break;
-      case "rebounds":
-        marketType = "reboundsByPlayerId";
-        break;
-      case "points":
-        marketType = "pointsbyPlayerId";
-        break;
-      case "steals":
-        marketType = "stealsByPlayerId";
-        break;
-      default:
-        break;
-    }
+      let marketType:
+        | "assistsByPlayerId"
+        | "reboundsByPlayerId"
+        | "pointsbyPlayerId"
+        | "stealsByPlayerId";
+      switch (prop.statType) {
+        case "assists":
+          marketType = "assistsByPlayerId";
+          break;
+        case "rebounds":
+          marketType = "reboundsByPlayerId";
+          break;
+        case "points":
+          marketType = "pointsbyPlayerId";
+          break;
+        case "steals":
+          marketType = "stealsByPlayerId";
+          break;
+        default:
+          break;
+      }
 
-    const suspended = !!marketSuspended;
+      const { highLine = "-", lowLine = "-", historicalLines = [] } =
+        // @ts-ignore: If marketType does not exist, we will use default '-' for highLine or lowLine.
+        altMarketsMap?.[marketType]?.[playerId] ?? {};
 
-    const { highLine = "-", lowLine = "-" } =
-      // @ts-ignore: If marketType does not exist, we will use default '-' for highLine or lowLine.
-      altMarketsMap?.[marketType]?.[playerId] ?? {};
-
-    return {
-      id: statType + playerId,
-      teamAbbr,
-      teamNickname,
-      playerName,
-      position,
-      statType:
-        statType.charAt(0).toUpperCase() + statType.slice(1).toLowerCase(),
-      line,
-      highLine: highLine,
-      lowLine: lowLine,
-      suspended: !!suspended ? "Suspended" : "Active",
-    };
-  })
+      return {
+        id: statType + playerId,
+        teamAbbr,
+        teamNickname,
+        playerName,
+        position,
+        statType:
+          statType.charAt(0).toUpperCase() + statType.slice(1).toLowerCase(),
+        line,
+        highLine: highLine,
+        lowLine: lowLine,
+        suspended: isMarketSuspended(prop, historicalLines) ? "Suspended" : "Active",
+      };
+    })
 }
 
 export const columns: GridColDef[] = [
