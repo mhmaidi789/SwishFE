@@ -36,7 +36,7 @@ type altMarketMap = {
 type lines = {
     lowLine: number;
     highLine: number;
-    historicalLines: number[];
+    historicalLinesGoodOdds: number[];
   };
   
 type altMarketLines = {
@@ -45,20 +45,25 @@ type altMarketLines = {
 
 
 const updateMarketHighLow = (
-    market: altMarketLines,
-    currentLine: number,
-    playerId: number
+    marketMap: altMarketLines,
+    altMarket: altMarket,
   ) => {
-    let trackedLines = market?.[playerId];
+
+    const { playerId, line, underOdds, overOdds, pushOdds } = altMarket
+    let trackedLines = marketMap?.[playerId];
     if (!trackedLines) {
-      market[playerId] = { lowLine: currentLine, highLine: currentLine, historicalLines: [] };
-      trackedLines = market[playerId];
-    } else if (currentLine < trackedLines.lowLine) {
-      market[playerId].lowLine = currentLine;
-    } else if (currentLine > trackedLines.highLine) {
-      market[playerId].highLine = currentLine;
+      marketMap[playerId] = { lowLine: line, highLine: line, historicalLinesGoodOdds: [] };
+      trackedLines = marketMap[playerId];
+    } else if (line < trackedLines.lowLine) {
+      marketMap[playerId].lowLine = line;
+    } else if (line > trackedLines.highLine) {
+      marketMap[playerId].highLine = line;
     }
-    trackedLines.historicalLines.push(currentLine);
+
+    if(underOdds > 0.4 || overOdds > 0.4 || pushOdds > 0.4){
+      trackedLines.historicalLinesGoodOdds.push(line);
+    }
+
   };
   
 
@@ -71,16 +76,16 @@ export const makeAltMarketsMap = (altData: altMarket[]) => {
     altData.forEach((alt: altMarket) => {
       switch (alt.statType) {
         case "assits":
-          updateMarketHighLow(assistsByPlayerId, alt.line, alt.playerId);
+          updateMarketHighLow(assistsByPlayerId, alt);
           break;
         case "rebounds":
-          updateMarketHighLow(reboundsByPlayerId, alt.line, alt.playerId);
+          updateMarketHighLow(reboundsByPlayerId, alt);
           break;
         case "points":
-          updateMarketHighLow(pointsbyPlayerId, alt.line, alt.playerId);
+          updateMarketHighLow(pointsbyPlayerId, alt);
           break;
         case "steals":
-          updateMarketHighLow(stealsByPlayerId, alt.line, alt.playerId);
+          updateMarketHighLow(stealsByPlayerId, alt);
           break;
         default:
           return;
@@ -95,13 +100,11 @@ export const makeAltMarketsMap = (altData: altMarket[]) => {
     };
   };
 
-const isMarketSuspended = (prop: propMarket, historicalLines: number[]) => {
+const isMarketSuspended = (prop: propMarket, historicalLinesGoodOdds: number[]) => {
   const {marketSuspended, line} = prop
 
-  return (
-    !!marketSuspended ||
-    !historicalLines.includes(line)
-    )
+  return !!marketSuspended || !historicalLinesGoodOdds.includes(line)
+    
 }
   
 
@@ -141,7 +144,7 @@ export const getMarketRows = (propsData: propMarket[], altDataRaw: altMarket[]) 
           break;
       }
 
-      const { highLine = "-", lowLine = "-", historicalLines = [] } =
+      const { highLine = "-", lowLine = "-", historicalLinesGoodOdds = [] } =
         // @ts-ignore: If marketType does not exist, we will use default '-' for highLine or lowLine.
         altMarketsMap?.[marketType]?.[playerId] ?? {};
 
@@ -156,7 +159,7 @@ export const getMarketRows = (propsData: propMarket[], altDataRaw: altMarket[]) 
         line,
         highLine: highLine,
         lowLine: lowLine,
-        suspended: isMarketSuspended(prop, historicalLines) ? "Suspended" : "Active",
+        suspended: isMarketSuspended(prop, historicalLinesGoodOdds) ? "Suspended" : "Active",
       };
     })
 }
