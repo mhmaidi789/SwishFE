@@ -2,7 +2,7 @@ import "./App.css";
 
 import propsDataRaw from "./data/props.json";
 import altDataRaw from "./data/alternates.json";
-import { DataGrid } from "@mui/x-data-grid";
+import { DataGrid, GridRowSelectionModel } from "@mui/x-data-grid";
 import { columns, getMarketRows } from "./utils";
 import { useState } from "react";
 
@@ -10,7 +10,9 @@ const MARKET_ROWS = getMarketRows(propsDataRaw, altDataRaw);
 
 function App() {
   const [marketRowsFiltered, setMarketRowsFiltered] = useState(MARKET_ROWS);
-  const [selectedRowIds, setSelectedRowIds] = useState([]);
+  const [selectedRowIds, setSelectedRowIds] = useState<GridRowSelectionModel>(
+    []
+  );
 
   // todo: fix type any
   const onChangeText = (event: any) => {
@@ -32,9 +34,7 @@ function App() {
     const updatedRows = marketRowsFiltered.slice().map((marketRow) => {
       const { isSuspended, id } = marketRow;
 
-      // @ts-ignore
       if (selectedRowIds.includes(id)) {
-        console.log("hi");
         return {
           ...marketRow,
           // Invert market status and isSuspended
@@ -49,7 +49,7 @@ function App() {
     setMarketRowsFiltered(updatedRows);
   };
 
-  const onRowSelectionModelChange = (selection: any) => {
+  const onRowSelectionModelChange = (selection: GridRowSelectionModel) => {
     setSelectedRowIds(selection);
   };
 
