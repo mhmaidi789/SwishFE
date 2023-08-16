@@ -18,8 +18,10 @@
   align-items: center;
 }
 
-.Search-container {
-  justify-content: center;
+.Search-button-container {
+  display: flex;
+  flex: 1;
+  gap: 20px;
 }
 
 .Search-bar {

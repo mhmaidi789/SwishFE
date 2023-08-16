@@ -145,6 +145,7 @@ export const getMarketRows = (propsData: propMarket[], altDataRaw: altMarket[]) 
       const { highLine = "-", lowLine = "-", historicalLinesGoodOdds = [] } =
         // @ts-ignore: If marketType does not exist, we will use default '-' for highLine or lowLine.
         altMarketsMap?.[marketType]?.[playerId] ?? {};
+      const isSuspended = isMarketSuspended(prop, historicalLinesGoodOdds)
 
       return {
         id: statType + playerId,
@@ -157,7 +158,8 @@ export const getMarketRows = (propsData: propMarket[], altDataRaw: altMarket[]) 
         line,
         highLine: highLine,
         lowLine: lowLine,
-        suspended: isMarketSuspended(prop, historicalLinesGoodOdds) ? "Suspended" : "Active",
+        isSuspended,
+        marketStatus: isSuspended ? "Suspended" : "Active",
       };
     })
 }
@@ -170,5 +172,5 @@ export const columns: GridColDef[] = [
     { field: "line", headerName: "Line" },
     { field: "highLine", headerName: "High Line" },
     { field: "lowLine", headerName: "Low Line" },
-    { field: "suspended", headerName: "Status" },
+    { field: "marketStatus", headerName: "Status" },
 ];
