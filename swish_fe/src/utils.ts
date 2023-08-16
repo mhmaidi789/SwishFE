@@ -159,7 +159,7 @@ export const getMarketRows = (propsData: propMarket[], altDataRaw: altMarket[]) 
         highLine: highLine,
         lowLine: lowLine,
         isSuspended,
-        marketStatus: isSuspended ? "Suspended" : "Active",
+        marketStatus: isSuspended ? "Suspended" : "Unsuspended",
       };
     })
 }
@@ -172,5 +172,5 @@ export const columns: GridColDef[] = [
     { field: "line", headerName: "Line" },
     { field: "highLine", headerName: "High Line" },
     { field: "lowLine", headerName: "Low Line" },
-    { field: "marketStatus", headerName: "Status" },
+    { field: "marketStatus", headerName: "Status", width: 150 },
 ];
